@@ -7,17 +7,14 @@ require 'scraperwiki'
 require 'wikidata/fetcher'
 require 'wikidata/area'
 
-query = <<QUERY
-  SELECT DISTINCT ?item
-  WHERE
-  {
-    ?item wdt:P31 wd:Q3382900
-  }
-QUERY
+current_q = 'SELECT DISTINCT ?item WHERE { ?item wdt:P31 wd:Q3382900 }'
+former_q  = 'SELECT DISTINCT ?item WHERE { ?item wdt:P31 wd:Q26714837 }'
 
-wanted = EveryPolitician::Wikidata.sparql(query)
-raise 'No ids' if wanted.empty?
+current = EveryPolitician::Wikidata.sparql(current_q)
+raise 'No current ids' if current.empty?
+former  = EveryPolitician::Wikidata.sparql(former_q)
+raise 'No former ids' if former.empty?
 
 ScraperWiki.sqliteexecute('DELETE FROM data') rescue nil
-data = Wikidata::Areas.new(ids: wanted).data
+data = Wikidata::Areas.new(ids: current | former).data
 ScraperWiki.save_sqlite(%i(id), data)
