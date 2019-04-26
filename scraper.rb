@@ -8,18 +8,15 @@ require 'wikidata/fetcher'
 require 'wikidata/area'
 
 query = <<-EOQ
-  SELECT DISTINCT ?item
-  WHERE
-  {
+  SELECT DISTINCT ?item WHERE {
     VALUES ?NZconstituency { wd:Q3382900 wd:Q26714837 }
     ?item wdt:P31 ?NZconstituency .
   }
-  ORDER BY ?itemLabel
 EOQ
 
 ids = EveryPolitician::Wikidata.sparql(query)
 raise 'No ids' if ids.empty?
 
-ScraperWiki.sqliteexecute('DELETE FROM data') rescue nil
 data = Wikidata::Areas.new(ids: ids).data
+ScraperWiki.sqliteexecute('DROP TABLE data') rescue nil
 ScraperWiki.save_sqlite(%i(id), data)
